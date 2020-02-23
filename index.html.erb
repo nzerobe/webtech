@@ -1,0 +1,39 @@
+<html>
+  <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  </head>
+  <body>
+    <h1>提出用の課題</h1>
+
+    <% require 'pg' %>
+
+    <% connection = PG::connect(dbname: "goya") %>
+    <% connection.internal_encoding = "UTF-8" %>
+
+    <!--自家消費でない方のデータ-->
+    <% result = connection.exec("select count(*),give_for from crops where not(give_for = '自家消費') group by give_for;") %>
+    <% date = [] %>
+    <% result.each do |record| %>
+      <%  date << "#{record["give_for"]}：#{record["count"]}回　" %>
+    <% end %>
+    
+    <!--品質が悪い物のデータ-->
+    <% result_ver2 = connection.exec("select count(*),give_for from crops where quality = false group by give_for;") %>
+    <% date_ver2 = [] %>
+    <% result_ver2.each do |record| %>
+      <%  date_ver2 << "#{record["give_for"]}：#{record["count"]}回　" %>
+    <% end %>
+
+    <form action='goya.cgi' method='POST'>
+       下記のボタンを押すと、譲渡先が自家消費以外の相手の情報に飛びます<br>
+      <input type="hidden" name="goya" value="<%= date.join('') %> ">
+      <input type="submit" name="送信" >
+    </form>
+    
+    <form action='goya_ver2.cgi' method='POST'>
+       下記のボタンを押すと、品質が悪い物を譲渡した相手の情報に飛びます<br>
+      <input type="hidden" name="goya_ver2" value="<%= date_ver2.join('') %> ">
+      <input type="submit" name="送信" >
+    </form>
+  </body>
+</html>
